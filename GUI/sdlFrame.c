@@ -2,16 +2,24 @@
 
 void KeyboardHandler_pressKey(KeyboardHandler *kbH, SDL_Keycode key){
   if(kbH->used >= 6) return;
-  for(Uint32 i = 0; i < kbH->used; ++i)
-  if(kbH->keys[i] == key) return;
+  for(Uint32 i = 0; i < kbH->used; ++i){
+    if(kbH->keys[i] == key) return;
+    if(!kbH->keys[i]){
+      kbH->keys[i] = key;
+      return;
+    }
+  }
   kbH->keys[kbH->used] = key;
+  ++kbH->used;
 }
 void KeyboardHandler_releaseKey(KeyboardHandler *kbH, SDL_Keycode key){
   if(!key) return;
   for(Uint32 i = 0; i < kbH->used; ++i)
   if(kbH->keys[i] == key){
     kbH->keys[i] = 0;
-    --kbH->used;
+    if(i == kbH->used)
+    while(kbH->used && !kbH->keys[kbH->used])
+      --kbH->used;
     return;
   };
 }
@@ -19,13 +27,24 @@ void KeyboardHandler_clear(KeyboardHandler *kbH){
   *kbH = (KeyboardHandler){0};
 }
 bool KeyboardHandler_hasKey(KeyboardHandler *kbH, SDL_Keycode key){
-  for(Uint32 i = 0; i < kbH->used; ++i)
+  for(Uint32 i = 0; i < sizeof(kbH->keys) / sizeof(kbH->keys[0]); ++i)
   if(kbH->keys[i] == key) return true;
   return false;
 }
 
-void MouseHandler_move(MouseHandler *mouseH, float x, float y){
+void MouseHandler_setPos(MouseHandler *mouseH, float x, float y){
   mouseH->pos = (SDL_FPoint){.x = x, .y = y};
+}
+void MouseHandler_move(MouseHandler *mouseH, float dx, float dy){
+  mouseH->move = (SDL_FPoint){.x = dx, .y = dy};
+}
+SDL_FPoint MouseHandler_getPos(MouseHandler *mouseH){
+  return mouseH->pos;
+}
+SDL_FPoint MouseHandler_getMovement(MouseHandler *mouseH){
+  SDL_FPoint ret = mouseH->move;
+  mouseH->move = (SDL_FPoint){0};
+  return ret;
 }
 void MouseHandler_pressButton(MouseHandler *mouseH, Uint8 button){
   SDL_assert(button > 0 && button <= 8);
